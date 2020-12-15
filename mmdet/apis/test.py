@@ -75,7 +75,7 @@ def single_gpu_test(model,
                         category_id = int(labels[k])
                         x1, y1, x2, y2 = bboxes[k][:4]
                         score = float(bboxes[k][-1])
-                        if score > 0.5:
+                        if score > show_score_thr:
                             annotation_item_dict = {'image_id': image_id, 'category_id': category_id + 1,
                                                     'bbox': [x1.item(), y1.item(), x2.item() - x1.item(),
                                                              y2.item() - y1.item()], 'score': score}
