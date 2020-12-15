@@ -1,6 +1,6 @@
 model = dict(
     type='FasterRCNN',
-    pretrained="/data/home/tianye/baai-federated-learning-crane-baseline/contestant-server/service/federated/weights/resnext101_64x4d.pth",
+    pretrained="torchvision://resnet50",
     backbone=dict(
         type='ResNet',
         depth=50,
