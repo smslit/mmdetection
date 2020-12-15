@@ -1,8 +1,10 @@
-import os.path as osp
+import json
+import time
 import pickle
 import shutil
 import tempfile
-import time
+import numpy as np
+import os.path as osp
 
 import mmcv
 import torch
@@ -17,12 +19,18 @@ def single_gpu_test(model,
                     data_loader,
                     show=False,
                     out_dir=None,
-                    show_score_thr=0.3):
+                    show_score_thr=0.3,
+                    export_file=None
+                    ):
     model.eval()
     results = []
     dataset = data_loader.dataset
     prog_bar = mmcv.ProgressBar(len(dataset))
+    annotation_list = []
+    image_id = 1
     for i, data in enumerate(data_loader):
+        if export_file:
+            image_id = i + 1
         with torch.no_grad():
             result = model(return_loss=False, rescale=True, **data)
 
@@ -47,7 +55,32 @@ def single_gpu_test(model,
                     out_file = osp.join(out_dir, img_meta['ori_filename'])
                 else:
                     out_file = None
+                if export_file:
+                    #################wgp add##################
+                    if isinstance(result[i], tuple):
+                        bbox_result, segm_result = result[i]
+                        if isinstance(segm_result, tuple):
+                            segm_result = segm_result[0]  # ms rcnn
+                    else:
+                        bbox_result, segm_result = result[i], None
+                    bboxes = np.vstack(bbox_result)
+                    labels = [
+                        np.full(bbox.shape[0], i, dtype=np.int32)
+                        for i, bbox in enumerate(bbox_result)
+                    ]
+                    labels = np.concatenate(labels)
 
+                    # image_name = out_file.split('/')[-1]
+                    for k in range(len(bboxes)):
+                        category_id = int(labels[k])
+                        x1, y1, x2, y2 = bboxes[k][:4]
+                        score = float(bboxes[k][-1])
+                        if score > 0.5:
+                            annotation_item_dict = {'image_id': image_id, 'category_id': category_id + 1,
+                                                    'bbox': [x1.item(), y1.item(), x2.item() - x1.item(),
+                                                             y2.item() - y1.item()], 'score': score}
+                            annotation_list.append(annotation_item_dict)
+                    ###################################
                 model.module.show_result(
                     img_show,
                     result[i],
@@ -63,6 +96,17 @@ def single_gpu_test(model,
 
         for _ in range(batch_size):
             prog_bar.update()
+        if export_file:
+            if out_dir is None:
+                out_dir = '.'
+            annotation_json_str = json.dumps(
+                annotation_list,
+                ensure_ascii=False,
+                indent=4,
+                separators=[',', ': ']
+            )
+            with open(out_dir + f'/{export_file}', 'w', encoding='utf-8') as json_file:
+                json_file.writelines(annotation_json_str)
     return results
 
 

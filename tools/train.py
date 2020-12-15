@@ -15,6 +15,7 @@ from mmdet import __version__
 from mmdet.apis import set_random_seed, train_detector
 from mmdet.datasets import build_dataset
 from mmdet.models import build_detector
+from mmdet.datasets.coco import CocoDataset
 from mmdet.utils import collect_env, get_root_logger
 
 
@@ -154,6 +155,7 @@ def main():
     model = build_detector(
         cfg.model, train_cfg=cfg.train_cfg, test_cfg=cfg.test_cfg)
 
+    CocoDataset.CLASSES = ('crane',)
     datasets = [build_dataset(cfg.data.train)]
     if len(cfg.workflow) == 2:
         val_dataset = copy.deepcopy(cfg.data.val)

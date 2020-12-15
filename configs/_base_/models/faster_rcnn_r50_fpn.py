@@ -1,6 +1,6 @@
 model = dict(
     type='FasterRCNN',
-    pretrained='torchvision://resnet50',
+    pretrained="/data/home/tianye/baai-federated-learning-crane-baseline/contestant-server/service/federated/weights/resnext101_64x4d.pth",
     backbone=dict(
         type='ResNet',
         depth=50,
@@ -43,7 +43,7 @@ model = dict(
             in_channels=256,
             fc_out_channels=1024,
             roi_feat_size=7,
-            num_classes=80,
+            num_classes=1,
             bbox_coder=dict(
                 type='DeltaXYWHBBoxCoder',
                 target_means=[0., 0., 0., 0.],
