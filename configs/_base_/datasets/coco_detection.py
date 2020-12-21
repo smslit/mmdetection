@@ -28,7 +28,7 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    classes=('crane',),
+    classes=('Crane',),
     samples_per_gpu=1,
     workers_per_gpu=2,
     train=dict(
